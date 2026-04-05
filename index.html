@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LWK Content Engine</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f2f2f7;
+  color: #1c1c1e;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: #fff;
+  padding: 16px 20px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e5ea;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-left .title { font-size: 17px; font-weight: 700; color: #1c1c1e; }
+.header-left .sub { font-size: 13px; color: #8e8e93; margin-top: 1px; }
+.copy-btn-header {
+  background: #4f5bd5;
+  color: #fff;
+  border: none;
+  border-radius: 22px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s;
+}
+.copy-btn-header:hover { background: #3d49c3; }
+.copy-badge {
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── Tab bar ── */
+.tab-bar {
+  background: #fff;
+  display: flex;
+  border-bottom: 1px solid #e5e5ea;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1;
+  min-width: 72px;
+  padding: 12px 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8e8e93;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s;
+  user-select: none;
+}
+.tab.active {
+  color: #4f5bd5;
+  border-bottom-color: #4f5bd5;
+  font-weight: 600;
+}
+
+/* ── Content ── */
+.content { padding: 20px 16px 120px; max-width: 600px; margin: 0 auto; }
+
+.panel { display: none; animation: fadeIn 0.2s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Section cards ── */
+.section-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin-bottom: 4px;
+}
+.section-desc {
+  font-size: 14px;
+  color: #8e8e93;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+/* ── Form elements ── */
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.field-row { margin-bottom: 16px; }
+
+input[type="text"], textarea {
+  width: 100%;
+  background: #f2f2f7;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  color: #1c1c1e;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+input[type="text"]:focus, textarea:focus { border-color: #4f5bd5; background: #fff; }
+textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+/* ── Angle preview ── */
+.angle-preview-card {
+  background: #f0f1ff;
+  border: 1px solid #d0d3f5;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+.angle-preview-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4f5bd5;
+  margin-bottom: 6px;
+}
+.angle-preview-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #3a3a5c;
+}
+.hl-topic { color: #c47000; font-weight: 600; }
+.hl-question { color: #1a56c4; font-weight: 600; }
+.hl-sig { color: #1a7a4a; font-weight: 600; }
+.hl-empty { color: #aaa; font-style: italic; }
+
+/* ── Reference bank ── */
+.ref-group { margin-bottom: 14px; }
+.ref-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4f5bd5;
+  margin-bottom: 8px;
+}
+.ref-toggle {
+  font-size: 13px;
+  color: #4f5bd5;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+  display: inline-block;
+  user-select: none;
+}
+.ref-section { display: none; }
+.ref-section.open { display: block; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chip {
+  background: #f2f2f7;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 13px;
+  color: #3a3a3a;
+  cursor: pointer;
+  transition: all 0.12s;
+  line-height: 1.3;
+}
+.chip:hover { border-color: #4f5bd5; color: #4f5bd5; background: #f0f1ff; }
+.chip:active { background: #4f5bd5; color: #fff; border-color: #4f5bd5; }
+
+.sub-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 10px 0 5px;
+}
+
+/* ── Next button ── */
+.next-btn {
+  width: 100%;
+  background: #4f5bd5;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.15s;
+}
+.next-btn:hover { background: #3d49c3; }
+
+/* ── Base prompt tiles ── */
+.prompt-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.prompt-tile {
+  background: #f2f2f7;
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.prompt-tile:hover { border-color: #c0c4f0; background: #f0f1ff; }
+.prompt-tile.selected { border-color: #4f5bd5; background: #f0f1ff; }
+.pt-icon { font-size: 24px; margin-bottom: 6px; }
+.pt-name { font-size: 14px; font-weight: 700; color: #1c1c1e; margin-bottom: 3px; }
+.pt-desc { font-size: 12px; color: #8e8e93; line-height: 1.3; }
+
+/* ── Q&A ── */
+.qa-block { margin-top: 12px; }
+.qa-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.qa-input-row input { flex: 1; }
+.add-btn {
+  background: #f2f2f7;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4f5bd5;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.add-btn:hover { background: #e8e9fc; }
+.qa-list { display: flex; flex-direction: column; gap: 6px; }
+.qa-item {
+  display: flex; align-items: center; gap: 8px;
+  background: #f2f2f7;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: #3a3a3a;
+}
+.qa-item span { flex: 1; }
+.qa-remove {
+  background: none; border: none; cursor: pointer;
+  color: #c7c7cc; font-size: 20px; padding: 0; line-height: 1;
+  transition: color 0.1s;
+}
+.qa-remove:hover { color: #ff3b30; }
+
+/* ── Tweaks ── */
+.tweak-list { display: flex; flex-direction: column; gap: 8px; }
+.tweak-row {
+  background: #f2f2f7;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tweak-header-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.tweak-header-row:hover { background: #e9e9ef; }
+.tweak-row-name { font-size: 15px; font-weight: 600; color: #1c1c1e; }
+.tweak-row-right { display: flex; align-items: center; gap: 8px; }
+.tweak-sel {
+  font-size: 12px; font-weight: 600; color: #4f5bd5;
+  background: #e8e9fc; padding: 3px 9px; border-radius: 8px; display: none;
+  max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tweak-chev { color: #c7c7cc; font-size: 12px; transition: transform 0.2s; }
+.tweak-row.open .tweak-chev { transform: rotate(180deg); }
+.tweak-opts-wrap { display: none; padding: 0 10px 10px; }
+.tweak-row.open .tweak-opts-wrap { display: block; }
+.tweak-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.tweak-opt {
+  background: #fff; border: 1px solid #e5e5ea;
+  border-radius: 8px; padding: 7px 12px;
+  font-size: 13px; color: #3a3a3a;
+  cursor: pointer; transition: all 0.12s;
+}
+.tweak-opt:hover { border-color: #4f5bd5; color: #4f5bd5; }
+.tweak-opt.selected { background: #4f5bd5; border-color: #4f5bd5; color: #fff; }
+
+.reset-link {
+  background: none; border: none;
+  font-size: 14px; color: #8e8e93;
+  cursor: pointer; padding: 10px 0;
+  display: block; margin: 4px auto 0;
+  text-decoration: underline;
+  text-decoration-color: #c7c7cc;
+}
+.reset-link:hover { color: #ff3b30; }
+
+/* ── My Prompt ── */
+.prompt-box {
+  background: #f2f2f7;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1c1c1e;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 120px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e5ea;
+}
+.prompt-box.empty { color: #c7c7cc; font-style: italic; }
+
+.copy-main-btn {
+  width: 100%;
+  background: #4f5bd5;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background 0.15s;
+}
+.copy-main-btn:hover { background: #3d49c3; }
+.copy-main-btn.copied { background: #34c759; }
+
+.how-to {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #8e8e93;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+.how-to strong { color: #1c1c1e; }
+
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.badge {
+  font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 8px;
+  background: #e8e9fc; color: #4f5bd5;
+}
+.badge.angle { background: #e6f4ec; color: #1a7a4a; }
+
+.no-tweaks-note {
+  font-size: 14px; color: #8e8e93; font-style: italic; margin-bottom: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="title">Content Engine</div>
+    <div class="sub">Learn with Kenneth</div>
+  </div>
+  <button class="copy-btn-header" onclick="copyPrompt()">
+    Copy prompt <span class="copy-badge" id="header-badge">0</span>
+  </button>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active"    onclick="goTab(0)">Angle</div>
+  <div class="tab"           onclick="goTab(1)">Context</div>
+  <div class="tab"           onclick="goTab(2)">Base Prompt</div>
+  <div class="tab"           onclick="goTab(3)">Tweaks</div>
+  <div class="tab"           onclick="goTab(4)">My Prompt</div>
+</div>
+
+<div class="content">
+
+  <!-- ══ TAB 0: ANGLE ══ -->
+  <div class="panel active" id="tab-0">
+
+    <div class="section-card">
+      <div class="section-title">Build your angle</div>
+      <div class="section-desc">Type your own or tap a suggestion below to fill each field.</div>
+
+      <div class="field-row">
+        <div class="field-label">I am studying…</div>
+        <input type="text" id="angle-topic" placeholder="e.g. Power Automate flows" oninput="updatePreview()">
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">Because I want to find out what / why / how…</div>
+        <textarea id="angle-question" rows="2" placeholder="e.g. why ops managers keep rebuilding the same manual process" oninput="updatePreview()"></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">In order to help my audience understand…</div>
+        <textarea id="angle-sig" rows="2" placeholder="e.g. that automation is a decision problem, not a technical one" oninput="updatePreview()"></textarea>
+      </div>
+
+      <div class="angle-preview-card">
+        <div class="angle-preview-label">Your angle</div>
+        <div class="angle-preview-text" id="angle-preview">
+          I am studying <span class="hl-empty">your topic</span> because I want to find out <span class="hl-empty">your question</span> in order to help my audience understand <span class="hl-empty">your significance</span>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference bank -->
+    <div class="section-card">
+      <div class="section-title">Angle reference bank</div>
+      <div class="section-desc">Tap any chip to paste it into the field above.</div>
+
+      <!-- Topics -->
+      <div class="ref-group">
+        <div class="ref-group-title">Topics — tap to fill "I am studying…"</div>
+        <div class="chip-row">
+          <div class="chip" onclick="fill('angle-topic','Manual Process Identification')">Manual Process Identification</div>
+          <div class="chip" onclick="fill('angle-topic','Power Automate Flows')">Power Automate Flows</div>
+          <div class="chip" onclick="fill('angle-topic','Power Apps for Non-Coders')">Power Apps for Non-Coders</div>
+          <div class="chip" onclick="fill('angle-topic','Approval & Notification Workflows')">Approval & Notification Workflows</div>
+          <div class="chip" onclick="fill('angle-topic','Automation Adoption & Mindset')">Automation Adoption & Mindset</div>
+        </div>
+      </div>
+
+      <!-- Questions -->
+      <div class="ref-group">
+        <div class="ref-group-title">Questions — tap to fill "because I want to find out…"</div>
+        <span class="ref-toggle" onclick="toggleRef('ref-q')">▶ Show questions</span>
+        <div class="ref-section" id="ref-q">
+
+          <div class="sub-label">Manual Process</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-question','why ops managers keep tolerating manual work they know is inefficient')">why ops managers tolerate inefficiency they already see</div>
+            <div class="chip" onclick="fill('angle-question','how you identify which processes are costing your team the most time right now')">how to identify which process costs the most time</div>
+            <div class="chip" onclick="fill('angle-question','what the actual dollar and hour cost is of one manual process repeated weekly')">what one repeated manual process actually costs</div>
+            <div class="chip" onclick="fill('angle-question','why it\'s hard to see your own inefficiencies when you\'re inside the operation')">why you can't see your own inefficiencies from inside</div>
+            <div class="chip" onclick="fill('angle-question','how you prioritize which process to fix first when everything feels urgent')">how to prioritize when everything feels urgent</div>
+          </div>
+
+          <div class="sub-label">Power Automate</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-question','how a non-technical manager builds their first working flow without breaking anything')">how a non-technical manager builds their first flow</div>
+            <div class="chip" onclick="fill('angle-question','why people start Power Automate and quit before finishing their first automation')">why people quit Power Automate before finishing</div>
+            <div class="chip" onclick="fill('angle-question','what the three flows are that every operations team should have running')">what three flows every ops team should have running</div>
+            <div class="chip" onclick="fill('angle-question','why Power Automate is already available to most SMBs and still almost never used')">why Power Automate is paid for but never used</div>
+          </div>
+
+          <div class="sub-label">Power Apps</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-question','how you replace a messy spreadsheet with a real app without writing a single line of code')">how to replace a spreadsheet with an app — no code</div>
+            <div class="chip" onclick="fill('angle-question','why non-technical people assume Power Apps is too advanced for them')">why people assume Power Apps is too advanced</div>
+            <div class="chip" onclick="fill('angle-question','why most Power Apps projects fail before they ever get deployed')">why most Power Apps projects fail before launch</div>
+          </div>
+
+          <div class="sub-label">Approval Workflows</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-question','why email-based approval chains survive in organizations that already have better tools')">why email approval chains survive when better tools exist</div>
+            <div class="chip" onclick="fill('angle-question','how you automate a multi-step approval process without needing IT involvement')">how to automate approvals without IT</div>
+            <div class="chip" onclick="fill('angle-question','how long it actually takes to build a working approval flow for the first time')">how long a first approval flow actually takes to build</div>
+          </div>
+
+          <div class="sub-label">Mindset</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-question','why smart, capable managers delay automation even when the pain is obvious')">why capable managers still delay automation</div>
+            <div class="chip" onclick="fill('angle-question','how one successful automation changes the way an ops manager sees their entire operation')">how one win changes how you see everything</div>
+            <div class="chip" onclick="fill('angle-question','why people pay for tools like Power Platform and never open them')">why people pay for Power Platform and never open it</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Significances -->
+      <div class="ref-group">
+        <div class="ref-group-title">Significances — tap to fill "in order to help my audience understand…"</div>
+        <span class="ref-toggle" onclick="toggleRef('ref-s')">▶ Show significances</span>
+        <div class="ref-section" id="ref-s">
+
+          <div class="sub-label">Manual Process</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-sig','that the first step to automation is simply seeing the cost clearly')">the first step is simply seeing the cost clearly</div>
+            <div class="chip" onclick="fill('angle-sig','that most process problems are decision problems disguised as workflow problems')">most process problems are disguised decision problems</div>
+            <div class="chip" onclick="fill('angle-sig','that prioritizing one fix beats trying to fix everything at once')">prioritizing one fix beats fixing everything at once</div>
+          </div>
+
+          <div class="sub-label">Power Automate</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-sig','that building your first flow is simpler than the fear of building it')">building your first flow is simpler than the fear of it</div>
+            <div class="chip" onclick="fill('angle-sig','that the tools to automate are already inside the software your company pays for')">the tools are already in software you already pay for</div>
+            <div class="chip" onclick="fill('angle-sig','that starting small and imperfect beats waiting to build something perfect')">starting small and imperfect beats waiting for perfect</div>
+          </div>
+
+          <div class="sub-label">Power Apps</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-sig','that the barrier to building a business app is lower than it has ever been')">the barrier to building an app is lower than ever</div>
+            <div class="chip" onclick="fill('angle-sig','that technical skill is not the bottleneck — clarity about the problem is')">technical skill isn't the bottleneck — clarity is</div>
+            <div class="chip" onclick="fill('angle-sig','that adoption is easier when the person who built the tool is the person who uses it')">adoption is easier when the builder is the user</div>
+          </div>
+
+          <div class="sub-label">Approval Workflows</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-sig','that the approval process is the single fastest win available in Power Automate')">approvals are the single fastest win in Power Automate</div>
+            <div class="chip" onclick="fill('angle-sig','that a 20-minute build can replace a process that has wasted hours every week for years')">a 20-min build can replace years of wasted hours</div>
+            <div class="chip" onclick="fill('angle-sig','that fixing approvals creates immediate visible credibility with leadership')">fixing approvals builds credibility with leadership fast</div>
+          </div>
+
+          <div class="sub-label">Mindset</div>
+          <div class="chip-row">
+            <div class="chip" onclick="fill('angle-sig','that the barrier is never skill — it\'s the story they\'re telling themselves about who automation is for')">the barrier is never skill — it's the story they tell themselves</div>
+            <div class="chip" onclick="fill('angle-sig','that identity shifts before skill does — and that\'s the right order')">identity shifts before skill — and that's the right order</div>
+            <div class="chip" onclick="fill('angle-sig','that being the person on your team who automates first is a career-defining move')">being first to automate on your team is career-defining</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="next-btn" onclick="goTab(1)">Next: Context →</button>
+  </div>
+
+  <!-- ══ TAB 1: CONTEXT ══ -->
+  <div class="panel" id="tab-1">
+    <div class="section-card">
+      <div class="section-title">Your context</div>
+      <div class="section-desc">These details power every prompt you build.</div>
+
+      <div class="field-row">
+        <div class="field-label">Business name</div>
+        <input type="text" id="biz-name" value="Learn with Kenneth">
+      </div>
+      <div class="field-row">
+        <div class="field-label">Industry</div>
+        <input type="text" id="industry" value="Power Platform education">
+      </div>
+      <div class="field-row">
+        <div class="field-label">Product or service</div>
+        <input type="text" id="product" value="online courses and workshops">
+      </div>
+      <div class="field-row">
+        <div class="field-label">Target audience</div>
+        <textarea id="audience" rows="3">operations managers at small-to-mid-sized businesses who want to automate manual processes without IT support or coding skills</textarea>
+      </div>
+    </div>
+    <button class="next-btn" onclick="goTab(2)">Next: Base Prompt →</button>
+  </div>
+
+  <!-- ══ TAB 2: BASE PROMPT ══ -->
+  <div class="panel" id="tab-2">
+    <div class="section-card">
+      <div class="section-title">Choose a base prompt</div>
+      <div class="section-desc">Pick the type of content you want to create.</div>
+
+      <div class="prompt-tiles">
+        <div class="prompt-tile" onclick="selectBase(this,'contrarian')">
+          <div class="pt-icon">💼</div>
+          <div class="pt-name">Contrarian</div>
+          <div class="pt-desc">Challenge what the industry believes</div>
+        </div>
+        <div class="prompt-tile" onclick="selectBase(this,'lightbulb')">
+          <div class="pt-icon">💡</div>
+          <div class="pt-name">Lightbulb</div>
+          <div class="pt-desc">Share what most people don't know</div>
+        </div>
+        <div class="prompt-tile" onclick="selectBase(this,'trending')">
+          <div class="pt-icon">📈</div>
+          <div class="pt-name">Trending</div>
+          <div class="pt-desc">Tie into what's happening now</div>
+        </div>
+        <div class="prompt-tile" onclick="selectBase(this,'qa')">
+          <div class="pt-icon">❓</div>
+          <div class="pt-name">Q&amp;A</div>
+          <div class="pt-desc">Answer audience questions</div>
+        </div>
+      </div>
+
+      <div class="qa-block" id="qa-block" style="display:none;">
+        <div class="field-label" style="margin-bottom:8px;">Your Q&amp;A questions</div>
+        <div class="qa-input-row">
+          <input type="text" id="qa-input" placeholder="Type a question…">
+          <button class="add-btn" onclick="addQA()">+ Add</button>
+        </div>
+        <div class="qa-list" id="qa-list"></div>
+      </div>
+    </div>
+    <button class="next-btn" onclick="goTab(3)">Next: Pick tweaks →</button>
+  </div>
+
+  <!-- ══ TAB 3: TWEAKS ══ -->
+  <div class="panel" id="tab-3">
+    <div class="section-card">
+      <div class="section-title">Pick your tweaks</div>
+      <div class="section-desc">Tap any card to expand it and pick an option. Stack as many as you want.</div>
+      <div class="tweak-list" id="tweak-list"></div>
+      <button class="reset-link" onclick="resetTweaks()">Reset tweaks</button>
+    </div>
+    <button class="next-btn" onclick="goTab(4)">View my prompt →</button>
+  </div>
+
+  <!-- ══ TAB 4: MY PROMPT ══ -->
+  <div class="panel" id="tab-4">
+    <div class="section-card">
+      <div class="section-title">Your prompt</div>
+      <div class="section-desc">Copy it and paste into Claude.</div>
+
+      <div id="no-tweaks-note" class="no-tweaks-note">No tweaks selected yet — go to the Tweaks tab to add some.</div>
+      <div class="badges" id="badges"></div>
+
+      <div class="prompt-box empty" id="prompt-box">Fill in your angle, context, base prompt, and tweaks to build your prompt.</div>
+
+      <button class="copy-main-btn" id="copy-main-btn" onclick="copyPrompt()">Copy Prompt for Claude</button>
+      <button class="reset-link" onclick="resetAll()">Reset all tweaks</button>
+
+      <div class="how-to">
+        <strong>How to use:</strong> Copy the prompt above, open a new chat at claude.ai, paste it in, and hit send. Claude will generate your new content variation instantly.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const state = {
+  basePrompt: null,
+  tweaks: {},
+  qaQuestions: [
+    "Can I automate my job without knowing how to code?",
+    "What's the difference between Power Automate and Power Apps?",
+    "How long does it actually take to build your first Power App?"
+  ]
+};
+
+const TWEAKS = [
+  { id:"platform", name:"Platform",           opts:["TikTok","LinkedIn","YouTube","Instagram"] },
+  { id:"persona",  name:"Persona lens",        opts:["The customer","The skeptic","The boss","The burnout","The early win"] },
+  { id:"tone",     name:"Tone",                opts:["Humorous","Panicked","Frustrated","Motivational","Contrarian","Empathetic"] },
+  { id:"length",   name:"Length",              opts:["Short (hook only)","Medium","Long-form"] },
+  { id:"format",   name:"Format",              opts:["Talking head script","Text post","Listicle","Story narrative","Tutorial outline"] },
+  { id:"style",    name:"Stylistic influence", opts:["Dan Kennedy direct","Alex Hormozi blunt","Donald Miller story","Gary Vee raw","Brené Brown vulnerable"] },
+  { id:"cta",      name:"Call to action",      opts:["None (awareness)","Follow / subscribe","Comment below","Download the Blueprint","Book a call"] },
+  { id:"pov",      name:"Point of view",       opts:["First person (I/my)","Second person (you/your)","Third person story"] }
+];
+
+// Navigation
+function goTab(n) {
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  document.querySelectorAll('.tab').forEach((t,i)   => t.classList.toggle('active', i===n));
+  if (n===4) buildPrompt();
+}
+
+// Angle
+function fill(id, val) {
+  document.getElementById(id).value = val;
+  updatePreview();
+}
+
+function toggleRef(id) {
+  const el = document.getElementById(id);
+  const tog = el.previousElementSibling;
+  const open = el.classList.toggle('open');
+  const label = tog.textContent.replace(/^[▶▼] /, '');
+  tog.textContent = (open ? '▼ Hide ' : '▶ Show ') + label;
+}
+
+function updatePreview() {
+  const t = document.getElementById('angle-topic').value.trim();
+  const q = document.getElementById('angle-question').value.trim();
+  const s = document.getElementById('angle-sig').value.trim();
+  const tH = t ? `<span class="hl-topic">${t}</span>`    : `<span class="hl-empty">your topic</span>`;
+  const qH = q ? `<span class="hl-question">${q}</span>` : `<span class="hl-empty">your question</span>`;
+  const sH = s ? `<span class="hl-sig">${s}</span>`      : `<span class="hl-empty">your significance</span>`;
+  document.getElementById('angle-preview').innerHTML =
+    `I am studying ${tH} because I want to find out ${qH} in order to help my audience understand ${sH}.`;
+  updateBadge();
+}
+
+// Base prompt
+function selectBase(el, val) {
+  state.basePrompt = val;
+  document.querySelectorAll('.prompt-tile').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('qa-block').style.display = val==='qa' ? 'block' : 'none';
+  updateBadge();
+}
+
+// Q&A
+function addQA() {
+  const inp = document.getElementById('qa-input');
+  const v = inp.value.trim(); if (!v) return;
+  state.qaQuestions.push(v); inp.value = ''; renderQA();
+}
+function removeQA(i) { state.qaQuestions.splice(i,1); renderQA(); }
+function renderQA() {
+  document.getElementById('qa-list').innerHTML = state.qaQuestions.map((q,i) =>
+    `<div class="qa-item"><span>${q}</span><button class="qa-remove" onclick="removeQA(${i})">×</button></div>`
+  ).join('');
+}
+document.getElementById('qa-input').addEventListener('keydown', e => { if(e.key==='Enter') addQA(); });
+
+// Tweaks
+function initTweaks() {
+  document.getElementById('tweak-list').innerHTML = TWEAKS.map(tw => `
+    <div class="tweak-row" id="tw-${tw.id}">
+      <div class="tweak-header-row" onclick="toggleTweak('${tw.id}')">
+        <span class="tweak-row-name">${tw.name}</span>
+        <span class="tweak-row-right">
+          <span class="tweak-sel" id="sel-${tw.id}"></span>
+          <span class="tweak-chev">▼</span>
+        </span>
+      </div>
+      <div class="tweak-opts-wrap">
+        <div class="tweak-opts">
+          ${tw.opts.map(o=>`<div class="tweak-opt" data-tw="${tw.id}" data-v="${o}" onclick="pickTweak('${tw.id}','${o}',this)">${o}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleTweak(id) { document.getElementById('tw-'+id).classList.toggle('open'); }
+
+function pickTweak(id, val, el) {
+  state.tweaks[id] = val;
+  document.querySelectorAll(`[data-tw="${id}"]`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const s = document.getElementById('sel-'+id);
+  s.textContent = val; s.style.display = 'inline';
+  updateBadge();
+}
+
+function resetTweaks() {
+  state.tweaks = {};
+  document.querySelectorAll('.tweak-opt').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.tweak-sel').forEach(s => { s.textContent=''; s.style.display='none'; });
+  updateBadge();
+}
+
+function resetAll() {
+  resetTweaks();
+  state.basePrompt = null;
+  document.querySelectorAll('.prompt-tile').forEach(t => t.classList.remove('selected'));
+  document.getElementById('qa-block').style.display = 'none';
+  ['angle-topic','angle-question','angle-sig'].forEach(id => document.getElementById(id).value = '');
+  updatePreview();
+  goTab(0);
+}
+
+// Badge count
+function updateBadge() {
+  const n = Object.keys(state.tweaks).length + (state.basePrompt ? 1 : 0);
+  document.getElementById('header-badge').textContent = n;
+}
+
+// Build prompt
+function buildPrompt() {
+  const biz  = document.getElementById('biz-name').value  || 'Learn with Kenneth';
+  const ind  = document.getElementById('industry').value  || 'Power Platform education';
+  const prod = document.getElementById('product').value   || 'online courses and workshops';
+  const aud  = document.getElementById('audience').value  || 'operations managers at SMBs';
+  const topic = document.getElementById('angle-topic').value.trim();
+  const q     = document.getElementById('angle-question').value.trim();
+  const sig   = document.getElementById('angle-sig').value.trim();
+
+  const bases = {
+    contrarian: `PRETEND YOU ARE AN ENERGETIC, MISSION-DRIVEN BUSINESS OWNER of ${biz} in the ${ind} industry that sells ${prod} to ${aud}, AND WRITE ME A MEDIUM-LENGTH POST THAT CHALLENGES A COMMON BELIEF OR ASSUMPTION in this industry that most people accept without questioning — something that, when said out loud, makes the audience stop and think "wait, is that actually true?"`,
+    lightbulb:  `PRETEND YOU ARE AN ENERGETIC, MISSION-DRIVEN BUSINESS OWNER of ${biz} in the ${ind} industry that sells ${prod} to ${aud}, AND WRITE ME A MEDIUM-LENGTH POST THAT IS HELPFUL AND THAT MOST PEOPLE ARE UNAWARE OF OR IGNORANT TO — something genuinely surprising that creates an "aha" moment for someone who has never considered it before.`,
+    trending:   `PRETEND YOU ARE AN ENERGETIC, MISSION-DRIVEN BUSINESS OWNER of ${biz} in the ${ind} industry that sells ${prod} to ${aud}, AND WRITE ME A MEDIUM-LENGTH POST THAT TIES INTO A CURRENT TREND OR SHIFT happening in the operations and automation space — something your audience is already seeing or feeling, even if they haven't named it yet.`,
+    qa:         `PRETEND YOU ARE AN ENERGETIC, MISSION-DRIVEN BUSINESS OWNER of ${biz} in the ${ind} industry that sells ${prod} to ${aud}, AND WRITE ME A MEDIUM-LENGTH POST THAT DIRECTLY ANSWERS THE FOLLOWING QUESTION(S) from your audience:\n\n${state.qaQuestions.map((qq,i)=>`${i+1}. ${qq}`).join('\n')}`
+  };
+
+  const base = state.basePrompt ? bases[state.basePrompt] : bases.lightbulb;
+
+  let angleLine = '';
+  if (topic || q || sig) {
+    angleLine = `\n\nCONTENT ANGLE:\nI am studying "${topic||'___'}" because I want to find out ${q||'___'} in order to help my audience understand ${sig||'___'}.`;
+  }
+
+  const tweakLines = [];
+  if (state.tweaks.platform) tweakLines.push(`Platform: ${state.tweaks.platform}`);
+  if (state.tweaks.persona)  tweakLines.push(`Persona lens: ${state.tweaks.persona}`);
+  if (state.tweaks.tone)     tweakLines.push(`Tone: ${state.tweaks.tone}`);
+  if (state.tweaks.length)   tweakLines.push(`Length: ${state.tweaks.length}`);
+  if (state.tweaks.format)   tweakLines.push(`Format: ${state.tweaks.format}`);
+  if (state.tweaks.style)    tweakLines.push(`Stylistic influence: ${state.tweaks.style}`);
+  if (state.tweaks.cta)      tweakLines.push(`Call to action: ${state.tweaks.cta}`);
+  if (state.tweaks.pov)      tweakLines.push(`Point of view: ${state.tweaks.pov}`);
+
+  const tweakBlock = tweakLines.length
+    ? `\n\nFor this variation, make it:\n${tweakLines.map(l=>`- ${l}`).join('\n')}`
+    : '';
+
+  const full = base + angleLine + tweakBlock;
+
+  // Render
+  const box = document.getElementById('prompt-box');
+  box.textContent = full;
+  box.classList.remove('empty');
+
+  // Badges
+  const bads = [];
+  if (topic) bads.push(`<span class="badge angle">📐 ${topic}</span>`);
+  tweakLines.forEach(l => bads.push(`<span class="badge">${l}</span>`));
+  document.getElementById('badges').innerHTML = bads.join('');
+
+  const noNote = document.getElementById('no-tweaks-note');
+  noNote.style.display = tweakLines.length ? 'none' : 'block';
+}
+
+// Copy
+function copyPrompt() {
+  const text = document.getElementById('prompt-box').textContent;
+  if (!text || text.startsWith('Fill in')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-main-btn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Prompt for Claude'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Init
+initTweaks();
+renderQA();
+</script>
+</body>
+</html>
